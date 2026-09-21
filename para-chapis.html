@@ -7,14 +7,13 @@
 <style>
   * { box-sizing: border-box; }
   html, body {
-    height: 100%;
+    min-height: 100%;
     margin: 0;
     background: #fff8e7;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Georgia', 'Times New Roman', serif;
-    overflow: hidden;
   }
 
   .container {
@@ -23,7 +22,9 @@
     align-items: center;
     justify-content: center;
     gap: 1.5rem;
-    padding: 2rem;
+    padding: 2rem 1rem;
+    width: 100%;
+    max-width: 420px;
   }
 
   svg { width: 260px; height: auto; }
@@ -76,6 +77,48 @@
     transition: opacity 1.2s ease, transform 1.2s ease;
   }
 
+  /* --- música --- */
+  .music {
+    width: 100%;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 1.2s ease, transform 1.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .music.show { opacity: 1; transform: translateY(0); }
+
+  #playBtn {
+    font-family: inherit;
+    font-size: 17px;
+    color: #6b4f1d;
+    background: #f9e6b0;
+    border: 1px solid #e0c675;
+    border-radius: 999px;
+    padding: 0.6rem 1.4rem;
+    cursor: pointer;
+    transition: background 0.25s ease, transform 0.15s ease;
+  }
+  #playBtn:hover { background: #f4d98c; }
+  #playBtn:active { transform: scale(0.96); }
+
+  #player {
+    width: 100%;
+    height: 152px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  #player iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+  .fallback {
+    font-size: 13px;
+    color: #a98a4d;
+    text-decoration: none;
+    border-bottom: 1px dotted #a98a4d;
+  }
+
   @media (max-width: 480px) {
     svg { width: 200px; }
     #msg { font-size: 22px; padding: 0 1rem; }
@@ -98,13 +141,64 @@
   </svg>
 
   <div id="msg">Para Chapis, la más linda</div>
+
+  <div class="music" id="music">
+    <button id="playBtn">💛 Escuchá esto</button>
+    <div id="player"></div>
+    <a class="fallback" href="https://www.youtube.com/watch?v=BfL7NircDTs" target="_blank" rel="noopener">abrir en YouTube</a>
+  </div>
 </div>
 
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
+  var VIDEO_ID = 'BfL7NircDTs';
+  var START_AT = 0;   // segundo en el que arranca
+  var VOLUME = 25;    // volumen inicial (0-100)
+
+  var ytPlayer = null;
+  var wantsPlay = false;
+
+  function onYouTubeIframeAPIReady() {
+    ytPlayer = new YT.Player('player', {
+      videoId: VIDEO_ID,
+      playerVars: { start: START_AT, rel: 0, playsinline: 1 },
+      events: {
+        onReady: function (e) {
+          e.target.setVolume(VOLUME);
+          if (wantsPlay) { e.target.playVideo(); wantsPlay = false; }
+        }
+      }
+    });
+  }
+
+  document.getElementById('playBtn').addEventListener('click', function () {
+    this.textContent = '♫ sonando...';
+    this.disabled = true;
+    if (ytPlayer && ytPlayer.playVideo) {
+      ytPlayer.setVolume(VOLUME);
+      ytPlayer.playVideo();
+    } else {
+      wantsPlay = true;
+    }
+  });
+
+  function playFlowerCycle() {
+    var animEls = document.querySelectorAll('.stem, .leaf, .petal, .center');
+    animEls.forEach(function (el) { el.style.animation = 'none'; });
+    void document.body.offsetWidth; // forzar reflow para poder reiniciar la animación
+    animEls.forEach(function (el) { el.style.animation = ''; });
+  }
+
+  playFlowerCycle();
+  setInterval(playFlowerCycle, 5000); // repite solo la animación de la flor cada 5 segundos
+
   setTimeout(function () {
     var m = document.getElementById('msg');
     m.style.opacity = '1';
     m.style.transform = 'translateY(0)';
+    setTimeout(function () {
+      document.getElementById('music').classList.add('show');
+    }, 900);
   }, 2600);
 </script>
 
